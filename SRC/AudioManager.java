@@ -1,20 +1,24 @@
-/**
- * Project: Solo Lab 5 Assignment
- * Purpose Details: Space shooter game with UI, audio, and gameplay features
- * Course: IST 242 (or your course)
- * Author: Arbi Xhepa
- * Date Developed: 06/15/2026
- * Last Date Changed: 06/15/2026
- * Rev: 1
- */
+import javax.sound.sampled.*;
+import java.io.File;
 
 public class AudioManager {
 
     public void playFire() {
-        System.out.println("Playing fire.wav");
+        play("src/sounds/fire.wav");
     }
 
     public void playHit() {
-        System.out.println("Playing hit.wav");
+        play("src/sounds/hit.wav");
+    }
+
+    private void play(String path) {
+        try {
+            AudioInputStream audio = AudioSystem.getAudioInputStream(new File(path));
+            Clip clip = AudioSystem.getClip();
+            clip.open(audio);
+            clip.start();
+        } catch (Exception e) {
+            System.out.println("Sound error: " + e.getMessage());
+        }
     }
 }
