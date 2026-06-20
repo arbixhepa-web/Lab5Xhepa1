@@ -2,10 +2,13 @@ import javax.swing.*;
 import javax.sound.sampled.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import javax.imageio.ImageIO;
 
 /**
  * Project: Solo Lab 5 Assignment - AstroDefense
@@ -22,7 +25,7 @@ public class AstroDefense extends JFrame implements KeyListener {
     private static final int WIDTH = 500;
     private static final int HEIGHT = 500;
 
-    private static final int PLAYER_WIDTH = 50;
+    private static final int PLAYER_WIDTH = 61;
     private static final int PLAYER_HEIGHT = 50;
 
     private static final int OBSTACLE_WIDTH = 40;
@@ -58,14 +61,20 @@ public class AstroDefense extends JFrame implements KeyListener {
     private List<Color> starColors = new ArrayList<>();
     private List<Point> powerUps = new ArrayList<>();
 
-    private Image playerImage;
+    private BufferedImage playerImage;
     private Image asteroidImage;
 
     private Random rand = new Random();
 
     public AstroDefense() {
 
-        setTitle("AstroDefense - Lab 7");
+      try {
+          playerImage = ImageIO.read(new File("resources/SpaceShip.png"));
+      } catch (IOException ex){
+          ex.printStackTrace();
+      }
+      setTitle("AstroDefense - Lab 7");
+
         setSize(WIDTH, HEIGHT);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
@@ -125,6 +134,7 @@ public class AstroDefense extends JFrame implements KeyListener {
 
         // 🚀 player
         g.drawImage(playerImage, playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT, null);
+
 
         // 🔫 projectile
         if (isProjectileVisible) {
