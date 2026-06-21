@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.sound.sampled.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -10,16 +9,6 @@ import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
 
-/**
- * Project: Solo Lab 5 Assignment - AstroDefense
- * Purpose Details: Space shooter game with movement, shooting, shields, power-ups, timer, and sprite assets
- * Course:
- * Author:
- * Date Developed:
- * Last Date Changed:
- * Rev: 1.3
- */
-
 public class AstroDefense extends JFrame implements KeyListener {
 
     private static final int WIDTH = 500;
@@ -28,8 +17,8 @@ public class AstroDefense extends JFrame implements KeyListener {
     private static final int PLAYER_WIDTH = 61;
     private static final int PLAYER_HEIGHT = 50;
 
-    private static final int OBSTACLE_WIDTH = 40;
-    private static final int OBSTACLE_HEIGHT = 40;
+    private static final int OBSTACLE_WIDTH = 30;
+    private static final int OBSTACLE_HEIGHT = 30;
 
     private static final int PROJECTILE_WIDTH = 5;
     private static final int PROJECTILE_HEIGHT = 10;
@@ -46,7 +35,11 @@ public class AstroDefense extends JFrame implements KeyListener {
     private int health = 5;
     private int timeLeft = 60;
     private int frameCounter = 0;
+
+    // LEVEL SYSTEM (DEFAULT PROGRESSION)
     private int level = 1;
+    private int levelTimer = 0;
+    private int spawnRate = 40;
 
     private boolean isGameOver = false;
     private boolean isProjectileVisible = false;
@@ -63,18 +56,21 @@ public class AstroDefense extends JFrame implements KeyListener {
 
     private BufferedImage playerImage;
     private Image asteroidImage;
+    private Image powerUpImage;
 
     private Random rand = new Random();
 
     public AstroDefense() {
 
-      try {
-          playerImage = ImageIO.read(new File("resources/SpaceShip.png"));
-      } catch (IOException ex){
-          ex.printStackTrace();
-      }
-      setTitle("AstroDefense - Lab 7");
+        try {
+            playerImage = ImageIO.read(new File("resources/SpaceShip.png"));
+            asteroidImage = ImageIO.read(new File("resources/Asteroid.png"));
+            powerUpImage = ImageIO.read(new File("resources/Powerup.png"));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
+        setTitle("AstroDefense - Lab 5");
         setSize(WIDTH, HEIGHT);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
@@ -100,10 +96,7 @@ public class AstroDefense extends JFrame implements KeyListener {
         playerX = WIDTH / 2;
         playerY = HEIGHT - 80;
 
-        System.out.println(getClass().getResource("/SpaceShip.png"));
-        System.out.println(getClass().getResource("/Astriod.png"));
-
-        // ⭐ STAR BACKGROUND
+        // STAR BACKGROUND
         for (int i = 0; i < 120; i++) {
             stars.add(new Point(rand.nextInt(WIDTH), rand.nextInt(HEIGHT)));
             starColors.add(new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255)));
@@ -125,35 +118,33 @@ public class AstroDefense extends JFrame implements KeyListener {
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, WIDTH, HEIGHT);
 
-        // ⭐ stars
+        // stars
         for (int i = 0; i < stars.size(); i++) {
             g.setColor(starColors.get(i));
             Point p = stars.get(i);
             g.fillRect(p.x, p.y, 2, 2);
         }
 
-        // 🚀 player
+        // player
         g.drawImage(playerImage, playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT, null);
 
-
-        // 🔫 projectile
+        // projectile
         if (isProjectileVisible) {
             g.setColor(Color.GREEN);
             g.fillRect(projectileX, projectileY, PROJECTILE_WIDTH, PROJECTILE_HEIGHT);
         }
 
-        // ☄️ asteroids
+        // asteroids
         for (Point p : obstacles) {
             g.drawImage(asteroidImage, p.x, p.y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT, null);
         }
 
-        // 💊 power-ups
-        g.setColor(Color.CYAN);
+        // powerups
         for (Point p : powerUps) {
-            g.fillOval(p.x, p.y, 10, 10);
+            g.drawImage(powerUpImage, p.x, p.y, 20, 20, null);
         }
 
-        // 🔵 HUD
+        // HUD
         g.setColor(Color.BLUE);
         g.setFont(new Font("Arial", Font.BOLD, 14));
         g.drawString("Score: " + score, 10, 20);
@@ -173,21 +164,29 @@ public class AstroDefense extends JFrame implements KeyListener {
     private void update() {
 
         frameCounter++;
+        levelTimer++;
 
-        // ⏱ timer
+        // GAME TIMER
         if (frameCounter % 50 == 0 && timeLeft > 0) {
             timeLeft--;
         }
 
         if (timeLeft <= 0) isGameOver = true;
 
-        // 📈 level system
-        if (score > 100) level = 2;
-        if (score > 200) level = 3;
+        // ================= DEFAULT LEVEL SYSTEM =================
+        if (levelTimer > 600 && level == 1) {   // ~12 sec
+            level = 2;
+            spawnRate = 30;
+        }
 
-        int speed = OBSTACLE_SPEED + level;
+        if (levelTimer > 1200 && level == 2) {  // ~24 sec
+            level = 3;
+            spawnRate = 20;
+        }
 
-        // ☄️ move asteroids
+        int speed = OBSTACLE_SPEED + (level * 2);
+
+        // move asteroids
         for (int i = 0; i < obstacles.size(); i++) {
             obstacles.get(i).y += speed;
             if (obstacles.get(i).y > HEIGHT) {
@@ -196,23 +195,24 @@ public class AstroDefense extends JFrame implements KeyListener {
             }
         }
 
-        // ☄️ spawn asteroids
-        if (rand.nextInt(40) == 1) {
+        // spawn asteroids (difficulty scaling)
+        if (rand.nextInt(spawnRate) == 1) {
             obstacles.add(new Point(rand.nextInt(WIDTH - 40), 0));
         }
 
-        // 💊 spawn power-ups
+        // spawn powerups
         if (rand.nextInt(120) == 1) {
             powerUps.add(new Point(rand.nextInt(WIDTH - 20), 0));
         }
 
-        // 💊 power-up movement
+        // powerup movement + collision
+        Rectangle player = new Rectangle(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
+
         for (int i = 0; i < powerUps.size(); i++) {
             Point p = powerUps.get(i);
             p.y += 2;
 
-            Rectangle player = new Rectangle(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
-            Rectangle pu = new Rectangle(p.x, p.y, 10, 10);
+            Rectangle pu = new Rectangle(p.x, p.y, 20, 20);
 
             if (player.intersects(pu)) {
                 health++;
@@ -221,16 +221,13 @@ public class AstroDefense extends JFrame implements KeyListener {
             }
         }
 
-        Rectangle player = new Rectangle(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
-
-        // 💥 collision
+        // asteroid collision
         for (int i = 0; i < obstacles.size(); i++) {
-            Rectangle obs = new Rectangle(obstacles.get(i).x, obstacles.get(i).y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
+            Rectangle obs = new Rectangle(obstacles.get(i).x, obstacles.get(i).y,
+                    OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
 
             if (player.intersects(obs)) {
-                if (!shieldActive) {
-                    health--;
-                }
+                if (!shieldActive) health--;
                 obstacles.remove(i);
                 i--;
             }
@@ -238,16 +235,19 @@ public class AstroDefense extends JFrame implements KeyListener {
 
         if (health <= 0) isGameOver = true;
 
-        // 🔫 projectile movement
+        // projectile movement
         if (isProjectileVisible) {
             projectileY -= PROJECTILE_SPEED;
             if (projectileY < 0) isProjectileVisible = false;
         }
 
-        // 🔫 projectile hit
+        // projectile hit
         for (int i = 0; i < obstacles.size(); i++) {
-            Rectangle obs = new Rectangle(obstacles.get(i).x, obstacles.get(i).y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
-            Rectangle proj = new Rectangle(projectileX, projectileY, PROJECTILE_WIDTH, PROJECTILE_HEIGHT);
+            Rectangle obs = new Rectangle(obstacles.get(i).x, obstacles.get(i).y,
+                    OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
+
+            Rectangle proj = new Rectangle(projectileX, projectileY,
+                    PROJECTILE_WIDTH, PROJECTILE_HEIGHT);
 
             if (proj.intersects(obs)) {
                 obstacles.remove(i);
@@ -266,13 +266,11 @@ public class AstroDefense extends JFrame implements KeyListener {
 
         int key = e.getKeyCode();
 
-        if (key == KeyEvent.VK_LEFT && playerX > 0) {
+        if (key == KeyEvent.VK_LEFT && playerX > 0)
             playerX -= PLAYER_SPEED;
-        }
 
-        if (key == KeyEvent.VK_RIGHT && playerX < WIDTH - PLAYER_WIDTH) {
+        if (key == KeyEvent.VK_RIGHT && playerX < WIDTH - PLAYER_WIDTH)
             playerX += PLAYER_SPEED;
-        }
 
         if (key == KeyEvent.VK_SPACE && !isFiring) {
             isFiring = true;
@@ -299,8 +297,6 @@ public class AstroDefense extends JFrame implements KeyListener {
 
     // ================= MAIN =================
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new AstroDefense().setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new AstroDefense().setVisible(true));
     }
 }
