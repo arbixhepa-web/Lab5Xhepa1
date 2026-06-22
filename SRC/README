@@ -1,0 +1,32 @@
+# AstroDefense
+
+## Project Description
+AstroDefense is a Java-based space shooter game where the player controls a spaceship, destroys asteroids/enemies, collects power-ups, and tries to survive while managing health and shields.
+
+## Features
+- Player movement controls
+- Shooting mechanics
+- Enemy/asteroid objects
+- Collision detection
+- Health and shield system
+- Power-ups
+- Timer system
+- Sprite/image assets
+- Score tracking
+
+## Technologies Used
+- Java
+- Java Swing
+- IntelliJ IDEA
+- BufferedImage / ImageIO for graphics
+
+## How to Run
+1. Open the project in IntelliJ IDEA
+2. Make sure all image/audio assets are located in the correct folders
+3. Run the main Java class
+
+## Controls
+- Arrow Keys / WASD: Move spaceship
+- Spacebar: Shoot
+
+## Project Structure
